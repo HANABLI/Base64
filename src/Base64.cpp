@@ -39,18 +39,21 @@ namespace {
         16 Q            33 h            50 y */
     std::map< char, uint8_t > DecodingTable() {
         std::map< char, uint8_t > decodingTable;
-        uint8_t num1;
-        uint8_t num2;
+        uint8_t num1, num2, num3;
         for (size_t i = 65; i <= 90; ++i ) {
             num1 = uint8_t(i-65);
             decodingTable.insert({static_cast<char>(i), num1});
         }
         for (size_t i = 97; i <= 122; ++i) {
-            num2 = (uint8_t(i - 97) + num1);
+            num2 = (uint8_t(i - 96) + num1);
             decodingTable.insert({static_cast<char>(i), num2});
         }
-        decodingTable.insert({'/', num2++});
-        decodingTable.insert({'+', num2++});
+        for (size_t i = 48; i <= 57; ++i) {
+            num3 = (uint8_t(i - 47) + num2);
+            decodingTable.insert({static_cast<char>(i), num3});
+        }
+        decodingTable.insert({'+', num3++});
+        decodingTable.insert({'/', num3++});
         return decodingTable;
     }
 }
@@ -93,10 +96,36 @@ namespace Base64 {
      }
 
      std::string Base64::DecodeFromBase64(const std::vector< uint8_t >& data) {
-        return "";
+        const auto decodingTablte = DecodingTable();
+        std::ostringstream output;
+        uint32_t buffer = 0;
+        size_t bits = 0;
+        for (auto datum: data) {
+            const auto entry = decodingTablte.find(datum);
+            uint32_t group = 0;
+            if (entry != decodingTablte.end()) {
+                group = entry->second;
+            }
+            buffer <<= 6;
+            bits += 6;
+            buffer += group;
+            if (bits >= 8) {
+                if (datum != '=') {
+                    output << (char)(buffer >> (bits - 8));
+                }
+                buffer &= ~(0xff << (bits - 8));
+                bits -= 8;
+            }
+        }   
+        return output.str();
      }
 
      std::string DecodeFromBase64(const std::string& data) {
-        return "";
+        return DecodeFromBase64(
+            std::vector < uint8_t >(
+                data.begin(),
+                data.end()
+            )
+        );
      }
 }
