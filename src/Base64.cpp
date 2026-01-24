@@ -99,7 +99,7 @@ namespace Base64
         return EncodeToBase64(std::vector<uint8_t>(data.begin(), data.end()));
     }
 
-    std::string Base64::DecodeFromBase64(const std::vector<uint8_t>& data) {
+    std::string DecodeFromBase64(const std::vector<uint8_t>& data) {
         const auto decodingTablte = DecodingTable();
         std::ostringstream output;
         uint32_t buffer = 0;
